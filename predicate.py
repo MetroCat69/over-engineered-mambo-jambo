@@ -1,12 +1,26 @@
 import json
 import logging
-from typing import Any,List,cast,Tuple
-from predicate_types import UnaryOperator,BinaryOperator,GroupOperation,BinaryOperation,UnaryOperation,Operation,GroupOperator
+from typing import Any, List, cast, Tuple
+from predicate_types import (
+    UnaryOperator,
+    BinaryOperator,
+    GroupOperation,
+    BinaryOperation,
+    UnaryOperation,
+    Operation,
+    GroupOperator,
+)
+
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 UNARY_OPERATOR_VALUES: Tuple[UnaryOperator, ...] = ("isNone", "isNotNone")
-BINARY_OPERATOR_VALUES: Tuple[BinaryOperator, ...] = ("eqTo", "notEqualTo", "isLessThan", "isGreaterThan")
+BINARY_OPERATOR_VALUES: Tuple[BinaryOperator, ...] = (
+    "eqTo",
+    "notEqualTo",
+    "isLessThan",
+    "isGreaterThan",
+)
 GROUP_OPERATOR_VALUES: Tuple[GroupOperator, ...] = ("and", "or")
 
 
@@ -43,23 +57,26 @@ class Predicate:
             try:
                 current = getattr(current, attr)
             except AttributeError:
-                raise 
+                raise
         return current
 
-    
     def _evaluate_operation(self, value: Any, operation: Operation) -> bool:
         try:
             operator = operation["operator"]
             # using casting as type narrowing does not work with mypy in this case so we are casting
-            if operation["operator"] in UNARY_OPERATOR_VALUES:
-                operation = cast(UnaryOperation,operation)
+            if operator in UNARY_OPERATOR_VALUES:
+                operation = cast(UnaryOperation, operation)
                 return self._eval_unary(operation["operator"], value)
-            elif operation["operator"] in BINARY_OPERATOR_VALUES:
-                operation = cast(BinaryOperation,operation)
-                return self._eval_binary(operation["operator"], value,operation["operand"] )
+            elif operator in BINARY_OPERATOR_VALUES:
+                operation = cast(BinaryOperation, operation)
+                return self._eval_binary(
+                    operation["operator"], value, operation["operand"]
+                )
             elif operator in GROUP_OPERATOR_VALUES:
-                operation = cast(GroupOperation,operation)
-                return self._eval_group(operation["operator"], value, operation["operations"])
+                operation = cast(GroupOperation, operation)
+                return self._eval_group(
+                    operation["operator"], value, operation["operations"]
+                )
             else:
                 raise ValueError(f"Unsupported operator: {operator}")
         except Exception as e:
@@ -85,14 +102,13 @@ class Predicate:
         elif operator == "isGreaterThan":
             return value > operand
         return False
-    
-    def _eval_group(self, operator: GroupOperator, value: Any, operations: List[Operation]) -> bool:
+
+    def _eval_group(
+        self, operator: GroupOperator, value: Any, operations: List[Operation]
+    ) -> bool:
         results = [self._evaluate_operation(value, op) for op in operations]
         if operator == "and":
             return all(results)
         elif operator == "or":
             return any(results)
         return False
-    
-
-
