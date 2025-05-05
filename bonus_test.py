@@ -86,6 +86,10 @@ async def test_predicate_not_modified_304(mock_env, mock_httpx_client):
     assert resource._etag == "etag123"
     assert isinstance(resource.predicate, Predicate)
 
+    assert client_instance.get.call_args_list[1][1]["headers"] == {
+        "If-None-Match": "etag123"
+    }
+
     await resource.close()
 
 

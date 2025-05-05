@@ -40,6 +40,9 @@ class RemotePredicateResource:
             if response.status_code == 200:
                 self._predicate = Predicate.from_json(response.text)
                 self._etag = response.headers.get("etag")
+            elif response.status_code == 304:
+                # No update needed
+                pass
         except Exception:
             pass  # silently retry later
 
